@@ -9,6 +9,15 @@ def main():
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 	s.bind((host, port))
 	s.listen(socket.SOMAXCONN)
+	try:
+		while 1:
+			inSocket, addr = s.accept()
+			info = inSocket.recv(500)
+			info.decode("utf-8")
+			print(info)
+			inSocket.close()
+	finally:
+		s.close()
 
 def registerClient():
 	try:
@@ -17,7 +26,7 @@ def registerClient():
 			info = s.recv(500)
 			info.decode("utf-8")
 			
-	finally
+	finally:
 		s.close()
 
 if __name__ == "__main__":
