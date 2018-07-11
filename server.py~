@@ -1,8 +1,10 @@
 import socket
 import json
 import time
+import sys
+import _thread
 from time import gmtime, strftime
-from threading import Thread
+from threading import Thread, Timer
 
 clients = []
 host = "localhost"
@@ -53,12 +55,13 @@ def registerClients(s):
 				clientInfo = info
 
 			while not connected:
+				print("not connected")
 				port += 1
 				t = Thread(target=connect, args=(host, port,))
 				t.start()
 				while not ready:
+					#print("not ready")
 					time.sleep(0.0001)
-			print(str(port))
 			sentbytes = inSocket.send(bytes(str(port), "utf-8"))				
 			ready = False
 			connected = False
@@ -69,21 +72,48 @@ def registerClients(s):
 		s.close()
 
 def connect(host, port):
+	print("hello")
 	global ready
 	global connected
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 	try:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 		s.bind((host, port))
 		s.listen(socket.SOMAXCONN)
-		insocket, addr = s.accept()
 		ready = True
 		connected = True
 		print("thread setup complete on port:")
 		print(port)
-	except OSError:
+	except OSError as e:
+		#TODO
 		ready = True
 		print("thread setup failed")
-		
+		print(e)
+		sys.exit()
+	
+	inSocket, addr = s.accept()
+
+	tim = Timer(10, timeout)
+	tim.start()
+	print("Tim lives")
+
+	run = True
+	while run:
+		if not tim.is_alive():
+			run = False
+		print("still running")
+		time.sleep(2)
+
+	'''while 1:
+		msg = inSocket.recv(500)
+		msg = msg.decode("utf-8")
+		msg = json.loads(msg)
+
+		if(info["hearthbeat"] == True):
+			tim.cancel()
+			tim.start()
+'''
+def timeout():
+	print("Ich heiße Tim!")	
 
 if __name__ == "__main__":
     main()

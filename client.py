@@ -1,6 +1,7 @@
 import json
 import socket
 import sys
+import subprocess
 from uuid import getnode
 import time
 
@@ -13,8 +14,18 @@ def main():
 		s.connect((host, port))
 		print("connected to ")
 
+		info = {}
+		cpu = subprocess.Popen(["lscpu | grep -E \"Model name\""], stdout=subprocess.PIPE, shell=True)
+		cpu = str(cpu.communicate()[0]).replace("\\n", "")
+		cpu = cpu[2: len(cpu)-2]
+		print(cpu)
+		info["cpu"] = cpu
+		info["gpu"] = ""
+		info["ram"] = ""
+		#TODO
+
 		clientID = str(getnode())
-		clientInfo = {"clientID": clientID, "Info":{}}
+		clientInfo = {"clientID": clientID, "Info":info}
 		clientInfo = json.dumps(clientInfo)
 		print(clientInfo)
 		sentbytes = s.send(bytes(clientInfo, "utf-8"))
@@ -29,6 +40,10 @@ def main():
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 		s.connect((host, port))
 		print("connected to ")
+		
+		while 1:
+			time.sleep(0.1)
+			#s.send(bytes(json.dumps("hearthbeat"), "utf-8"))
 
 		s.close()
 		print("connection closed")
