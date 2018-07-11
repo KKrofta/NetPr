@@ -22,7 +22,6 @@ def main():
 	
 		port = s.recv(500)
 		port = int(port.decode("utf-8"))
-		print("connecting to port:")
 		print(port)
 
 		s.close()

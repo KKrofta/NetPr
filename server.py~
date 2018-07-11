@@ -58,6 +58,7 @@ def registerClients(s):
 				t.start()
 				while not ready:
 					time.sleep(0.0001)
+			print(str(port))
 			sentbytes = inSocket.send(bytes(str(port), "utf-8"))				
 			ready = False
 			connected = False
