@@ -12,8 +12,22 @@ host = "localhost"
 port = 5000
 ready = False
 connected = False
+running = True
 
 def main():
+	global running
+	t = Thread(target=startListener, args=())
+	t.start()
+	while running:
+		command = input("")
+		print(command)
+		if (command == "close" or command == "c" or command == "quit"):
+			print("closing")
+			running = False
+			#t.join()
+		
+
+def startListener():
 	global host
 	global port
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
@@ -33,49 +47,67 @@ def registerClients(s):
 	global port
 	global ready
 	global connected
+	global running
+	threads = []
 	try:
-		while 1:
-			inSocket, addr = s.accept()
-			info = inSocket.recv(500)
-			info = info.decode("utf-8")
-			info = json.loads(info)
-			info["alive"] = True
-			info["date"] = strftime("%Y-%m-%d", gmtime())
-			alreadyRegistered = False
-			clientInfo = {}
-			for client in clients:
-				if client["clientID"] == info["clientID"]:
-					alreadyRegistered = True
-					clientInfo = client
-			if(not alreadyRegistered):
-				clients.append(info)
-			elif clientInfo["alive"]:
-				#TODO
-				print("ERROR: Client already connected!")
-			else:
-				clientInfo = info
+		while running:
+			s.settimeout(2)
+			try:
+				print("block0")
+				inSocket, addr = s.accept()
+				print("block1")
+				info = inSocket.recv(500)
+				print("block2")
+				info = info.decode("utf-8")
+				info = json.loads(info)
+				info["alive"] = True
+				info["date"] = strftime("%Y-%m-%d", gmtime())
+				alreadyRegistered = False
+				clientInfo = {}
+				for client in clients:
+					if client["clientID"] == info["clientID"]:
+						alreadyRegistered = True
+						clientInfo = client
+				if(not alreadyRegistered):
+					clients.append(info)
+				elif clientInfo["alive"]:
+					#TODO
+					print("ERROR: Client already connected!")
+				else:
+					clientInfo = info
 
-			while not connected:
-				print("not connected")
-				port += 1
-				t = Thread(target=connect, args=(host, port,))
-				t.start()
-				while not ready:
-					#print("not ready")
-					time.sleep(0.0001)
-			sentbytes = inSocket.send(bytes(str(port), "utf-8"))				
-			ready = False
-			connected = False
-			inSocket.close()
-			print(clients)
+				t = None
+				while not connected:
+					print("not connected")
+					port += 1
+					t = Thread(target=connect, args=(host, port,))
+					t.start()
+					while not ready:
+						#print("not ready")
+						time.sleep(0.0001)
+				sentbytes = inSocket.send(bytes(str(port), "utf-8"))				
+				ready = False
+				connected = False
+				threads.append(t)
+				inSocket.close()
+			except socket.timeout:
+				pass
+			#print(clients)
 				
 	finally:
+		print("closing childs")
+		for t in threads:
+			t.join()
+			print("one less")
+		print("all childs closed")
 		s.close()
+		print("child finished")
 
 def connect(host, port):
 	print("hello")
 	global ready
 	global connected
+	global running
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 	try:
 		s.bind((host, port))
@@ -98,22 +130,24 @@ def connect(host, port):
 	print("Tim lives")
 
 	run = True
-	while run:
+	while run and running:
 		if not tim.is_alive():
 			run = False
-		print("still running")
+		#print("still running")
 
 		rdy = select.select([inSocket], [], [], 2)
 		if rdy[0]:
 			msg = inSocket.recv(500)
 			msg = msg.decode("utf-8")
 			msg = json.loads(msg)
-			print(msg)
+			#print(msg)
 
 			if(msg["hearthbeat"] == True):
 				tim.cancel()
 				tim = Timer(10, timeout)
 				tim.start()
+	tim.cancel()
+	print("child child finished")
 
 def timeout():
 	print("Ich heiße Tim!")	
