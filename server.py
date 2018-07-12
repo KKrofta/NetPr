@@ -1,13 +1,15 @@
-import socket
-import select
 import json
-import time
+import re
+import select
+import socket
 import sys
 import _thread
-from time import gmtime, strftime
+import time
 from threading import Thread, Timer
+from time import gmtime, strftime
 
 clients = []
+packages = [{"package": "1", "version": "1", "url": "1"}, {"package": "2", "version": "2", "url": "2"}]
 host = "localhost"
 port = 5000
 ready = False
@@ -20,11 +22,23 @@ def main():
 	t.start()
 	while running:
 		command = input("")
-		print(command)
-		if (command == "close" or command == "c" or command == "quit"):
+		command = command.split(" ")
+		if (command[0] == "close" or command == "c" or command == "quit"):
 			print("closing")
 			running = False
-			#t.join()
+			t.join()
+		elif command[0] == "clients":
+			for client in clients:
+				print(client)
+		elif command[0] == "client":
+			found = False
+			for client in clients:
+				if client["clientID"] == command[1]:
+					print(client)
+					found = True
+			if not found:
+				print("Client not found, might be a wrong ID")
+			
 		
 
 def startListener():
@@ -53,11 +67,8 @@ def registerClients(s):
 		while running:
 			s.settimeout(2)
 			try:
-				print("block0")
 				inSocket, addr = s.accept()
-				print("block1")
 				info = inSocket.recv(500)
-				print("block2")
 				info = info.decode("utf-8")
 				info = json.loads(info)
 				info["alive"] = True
@@ -137,12 +148,12 @@ def connect(host, port):
 
 		rdy = select.select([inSocket], [], [], 2)
 		if rdy[0]:
-			msg = inSocket.recv(500)
+			msg = inSocket.recv(5000)
 			msg = msg.decode("utf-8")
 			msg = json.loads(msg)
-			#print(msg)
+			print(msg)
 
-			if(msg["hearthbeat"] == True):
+			if(msg["type"] == "hearthbeat"):
 				tim.cancel()
 				tim = Timer(10, timeout)
 				tim.start()

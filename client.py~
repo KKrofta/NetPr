@@ -1,12 +1,19 @@
 import json
 import socket
-import sys
 import subprocess
-from uuid import getnode
+import sys
 import time
+from threading import Thread
+from uuid import getnode
+
+packages = [{"package": "1", "version": "1", "url": "1"}, {"package": "2", "version": "2", "url": "2"}]
+consoleInput = []
 
 def main():
 	if(len(sys.argv) == 3):
+		t = Thread(target=startListener, args=())
+		t.start()
+
 		host = sys.argv[1]
 		port = int(sys.argv[2])
 
@@ -42,13 +49,25 @@ def main():
 		print("connected to ")
 		
 		while 1:
-			time.sleep(5)
-			s.send(bytes(json.dumps({"hearthbeat": True}), "utf-8"))
-
+			time.sleep(1)
+			s.send(bytes(json.dumps({"type": "hearthbeat"}), "utf-8"))
+			for command in consoleInput:
+				if command == "update":
+					req = {"type": "update", "packages": []}
+					for package in packages:
+						req["packages"].append(package)
+					s.send(bytes(json.dumps(req), "utf-8"))
+				consoleInput.pop(0)
+			
 		s.close()
 		print("connection closed")
 	else:
 		print("Usage: client host port")
+
+def startListener():
+	while 1:
+		command = input("")
+		consoleInput.append(command)
 
 if __name__ == "__main__":
     main()
