@@ -42,8 +42,8 @@ def main():
 		print("connected to ")
 		
 		while 1:
-			time.sleep(0.1)
-			#s.send(bytes(json.dumps("hearthbeat"), "utf-8"))
+			time.sleep(1)
+			s.send(bytes(json.dumps({"hearthbeat": True}), "utf-8"))
 
 		s.close()
 		print("connection closed")

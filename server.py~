@@ -1,4 +1,5 @@
 import socket
+import select
 import json
 import time
 import sys
@@ -101,17 +102,19 @@ def connect(host, port):
 		if not tim.is_alive():
 			run = False
 		print("still running")
-		time.sleep(2)
 
-	'''while 1:
-		msg = inSocket.recv(500)
-		msg = msg.decode("utf-8")
-		msg = json.loads(msg)
+		rdy = select.select([inSocket], [], [], 2)
+		if rdy[0]:
+			msg = inSocket.recv(500)
+			msg = msg.decode("utf-8")
+			msg = json.loads(msg)
+			print(msg)
 
-		if(info["hearthbeat"] == True):
-			tim.cancel()
-			tim.start()
-'''
+			if(msg["hearthbeat"] == True):
+				tim.cancel()
+				tim = Timer(10, timeout)
+				tim.start()
+
 def timeout():
 	print("Ich heiße Tim!")	
 
