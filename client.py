@@ -6,11 +6,13 @@ import time
 from threading import Thread
 from uuid import getnode
 
-packages = [{"package": "1", "version": "1.0", "url": "1"}, {"package": "2", "version": "1.0", "url": "2"}, {"package": "3", "version": "2.0", "url": "1"}, {"package": "4", "version": "3.0", "url": "1"}, {"package": "5", "version": "2.0", "url": "1"}]
+packages = []
 consoleInput = []
 
 def main():
 	if(len(sys.argv) == 3):
+		loadPackages()
+
 		t = Thread(target=startListener, args=())
 		t.start()
 
@@ -59,16 +61,34 @@ def main():
 					s.send(bytes(json.dumps(req), "utf-8"))
 					updates = s.recv(500)
 					updates = json.loads(updates.decode("utf-8"))
-					print("There are updates for the following packages:")
-					for update in updates:
-						u = update["package"] + ": Version " + update["updateVersion"] + " aviable, current Version is " + update["version"]
-						print(u)
+					if len(updates) == 0:
+						print("There are no new updates aviable")
+					else:
+						print("There are updates for the following packages:")
+						for update in updates:
+							u = update["package"] + ": Version " + update["updateVersion"] + " aviable, current Version is " + update["version"]
+							print(u)
+				elif command == "packages":
+					print(packages)
+				
 				consoleInput.pop(0)
 			
 		s.close()
 		print("connection closed")
 	else:
 		print("Usage: client host port")
+
+def loadPackages():
+	global packages
+	f = None
+	try:
+		f = open("localPackages.json", "r")
+		packages = json.loads(f.read())
+	except FileNotFoundError:
+		f = open("localPackages.json", "w+")
+		f.write("[]")
+	f.close()
+	print("packages loaded")
 
 def startListener():
 	while 1:

@@ -9,7 +9,7 @@ from threading import Thread, Timer
 from time import gmtime, strftime
 
 clients = []
-packages = [{"package": "1", "version": "1.0", "url": "1"}, {"package": "2", "version": "2.0", "url": "2"}, {"package": "3", "version": "4.0", "url": "1"}, {"package": "4", "version": "7.0", "url": "1"}, {"package": "5", "version": "2.0", "url": "1"}]
+packages = []
 host = "localhost"
 port = 5000
 ready = False
@@ -17,6 +17,8 @@ connected = False
 running = True
 
 def main():
+	loadPackages()
+	loadClients()
 	global running
 	t = Thread(target=startListener, args=())
 	t.start()
@@ -28,8 +30,11 @@ def main():
 			running = False
 			t.join()
 		elif command[0] == "clients":
-			for client in clients:
-				print(client)
+			if len(clients) == 0:
+				print("No clients found!")
+			else:
+				for client in clients:
+					print(client)
 		elif command[0] == "client":
 			found = False
 			for client in clients:
@@ -38,8 +43,41 @@ def main():
 					found = True
 			if not found:
 				print("Client not found, might be a wrong ID")
+		elif command[0] == "packages":
+			print(packages)
+
+def loadPackages():
+	global packages
+	f = None
+	try:
+		f = open("packages.json", "r")
+		packages = json.loads(f.read())
+	except FileNotFoundError:
+		f = open("packages.json", "w+")
+		f.write("[]")
+	f.close()
+	print("packages loaded")
 			
-		
+def loadClients():
+	global clients
+	f = None
+	try:
+		f = open("clients.json", "r")
+		clients = json.loads(f.read())
+	except FileNotFoundError:
+		f = open("clients.json", "w+")
+		f.write("[]")
+	f.close()
+	print("clients loaded")
+
+def saveClients():
+	global clients
+	f = None
+	try:
+		f = open("clients.json", "w")
+		f.write(json.dumps(clients))
+	finally:
+		f.close()
 
 def startListener():
 	global host
@@ -81,11 +119,13 @@ def registerClients(s):
 						clientInfo = client
 				if(not alreadyRegistered):
 					clients.append(info)
+					saveClients()
 				elif clientInfo["alive"]:
 					#TODO
 					print("ERROR: Client already connected!")
 				else:
 					clientInfo = info
+					saveClients()
 
 				t = None
 				while not connected:
@@ -115,6 +155,7 @@ def registerClients(s):
 		print("child finished")
 
 def connect(host, port):
+	#TODO catch client disconnecting
 	print("hello")
 	global ready
 	global connected
@@ -144,7 +185,7 @@ def connect(host, port):
 	while run and running:
 		if not tim.is_alive():
 			run = False
-		#print("still running")
+			#TODO set alive to false
 
 		rdy = select.select([inSocket], [], [], 2)
 		if rdy[0]:
