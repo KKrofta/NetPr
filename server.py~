@@ -9,7 +9,7 @@ from threading import Thread, Timer
 from time import gmtime, strftime
 
 clients = []
-packages = [{"package": "1", "version": "1", "url": "1"}, {"package": "2", "version": "2", "url": "2"}]
+packages = [{"package": "1", "version": "1.0", "url": "1"}, {"package": "2", "version": "2.0", "url": "2"}, {"package": "3", "version": "4.0", "url": "1"}, {"package": "4", "version": "7.0", "url": "1"}, {"package": "5", "version": "2.0", "url": "1"}]
 host = "localhost"
 port = 5000
 ready = False
@@ -148,15 +148,34 @@ def connect(host, port):
 
 		rdy = select.select([inSocket], [], [], 2)
 		if rdy[0]:
-			msg = inSocket.recv(500)
+			msg = inSocket.recv(5000)
 			msg = msg.decode("utf-8")
-			msg = json.loads(msg)
-			print(msg)
+			msg = msg.split("}{")
+			#TODO: catch halve complete messages
+			i = 0
+			for m in msg:
+				if i != 0:
+					m = "{" + m
+				if i != len(msg)-1:
+					m = m + "}"
+				m = json.loads(m)
+				i += 1
 
-			if(msg["type"] == "hearthbeat"):
-				tim.cancel()
-				tim = Timer(10, timeout)
-				tim.start()
+				if(m["type"] == "hearthbeat"):
+					tim.cancel()
+					tim = Timer(10, timeout)
+					tim.start()
+
+				elif m["type"] == "update":
+					updates = []
+					for clPackage in m["packages"]:
+						for sePackage in packages:
+							if clPackage["package"] == sePackage["package"]:
+								if clPackage["version"] == sePackage["version"]:
+									clPackage["updateVersion"] = sePackage["version"]
+									updates.append(clPackage)
+									break
+					inSocket.send(bytes(json.dumps(updates), "utf-8"))
 	tim.cancel()
 	print("child child finished")
 
