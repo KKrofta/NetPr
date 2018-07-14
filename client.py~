@@ -54,7 +54,7 @@ def main():
 			time.sleep(1)
 			s.send(bytes(json.dumps({"type": "hearthbeat"}), "utf-8"))
 			for command in consoleInput:
-				if command == "update":
+				if command[0] == "update":
 					req = {"type": "update", "packages": []}
 					for package in packages:
 						req["packages"].append(package)
@@ -68,8 +68,26 @@ def main():
 						for update in updates:
 							u = update["package"] + ": Version " + update["updateVersion"] + " aviable, current Version is " + update["version"]
 							print(u)
-				elif command == "packages":
+				elif command[0] == "packages":
 					print(packages)
+
+				elif command[0] == "upgrade":
+					if len(command) == 2:
+						packageFound = False
+						for package in packages:
+							if package["package"] == command[1]:
+								req = {"type": "upgrade", "package": command[1]}
+								s.send(bytes(json.dumps(req), "utf-8"))
+								pack = s.recv(5000)
+								pack = json.loads(pack.decode("utf-8"))
+								f = open("bob.tar.gz", "w+")
+								f.write(pack["file"])
+								f.close()
+								packageFound = True
+						if not packageFound:
+							print("No such package installed")
+					else:
+						print("Usage: upgrade [packagename]")
 				
 				consoleInput.pop(0)
 			
@@ -93,6 +111,7 @@ def loadPackages():
 def startListener():
 	while 1:
 		command = input("")
+		command = command.split(" ")
 		consoleInput.append(command)
 
 if __name__ == "__main__":

@@ -217,6 +217,21 @@ def connect(host, port):
 									updates.append(clPackage)
 									break
 					inSocket.send(bytes(json.dumps(updates), "utf-8"))
+				
+				elif m["type"] == "upgrade":
+						packageFound = False
+						for package in packages:
+							if package["package"] == m["package"]:
+								packageFound = True
+								f = None
+								try:	
+									f = open("Packages/Test.tar.gz", "r", encoding = "latin-1")
+									pack = f.read()
+									upgrade = {"version": package["version"], "file": pack}
+									inSocket.send(bytes(json.dumps(upgrade), "utf-8"))
+								except FileNotFoundError:
+									print("Error: couldn't find File")
+								f.close()
 	tim.cancel()
 	print("child child finished")
 
