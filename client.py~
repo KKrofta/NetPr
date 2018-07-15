@@ -1,5 +1,6 @@
 import hashlib
 import json
+import select
 import socket
 import subprocess
 import sys
@@ -9,10 +10,11 @@ from uuid import getnode
 
 packages = []
 consoleInput = []
-tarencoding = "latin-1"
+tarEncoding = "latin-1"
 
 def main():
 	if(len(sys.argv) == 3):
+		generateTestPackages()
 		loadPackages()
 
 		t = Thread(target=startListener, args=())
@@ -80,12 +82,26 @@ def main():
 							if package["package"] == command[1]:
 								req = {"type": "upgrade", "package": package}
 								s.send(bytes(json.dumps(req), "utf-8"))
-								pack = s.recv(5000)
-								pack = json.loads(pack.decode("utf-8"))
+								pack = s.recv(8000)
+								complete = False
+								while not complete:
+									rdy = select.select([s], [], [], 0.1)
+									if rdy[0]:
+										pack += s.recv(8000)
+									else:
+										complete = True
+								pack = pack.decode("utf-8")
+								pack = json.loads(pack)
 								if pack["info"] == None:
-									f = open("bob.tar.gz", "wb")
-									f.write(bytes(pack["file"], tarencoding))
-									f.close()
+									try:
+										f = open(package["url"], "wb")
+										f.write(bytes(pack["file"], tarEncoding))
+										f.close()
+										package["version"] = pack["version"]
+										savePackages()
+										print("Package " + package["package"] + " successfully upgraded to version " + package["version"])
+									except Exception as e:
+										print(e)
 								else:
 									print(pack["info"])
 								
@@ -94,6 +110,39 @@ def main():
 							print("No such package installed")
 					else:
 						print("Usage: upgrade [packagename]")
+
+				elif command[0] == "install":
+					if len(command) == 3:
+						package = {"package": command[1], "version": "", "url": command[2]}
+						req = {"type": "upgrade", "package": package}
+						s.send(bytes(json.dumps(req), "utf-8"))
+						pack = s.recv(8000)
+						complete = False
+						while not complete:
+							rdy = select.select([s], [], [], 0.1)
+							if rdy[0]:
+								pack += s.recv(8000)
+							else:
+								complete = True
+						pack = pack.decode("utf-8")
+						pack = json.loads(pack)
+						if pack["info"] == None:
+							try:
+								f = open(package["url"], "wb")
+								f.write(bytes(pack["file"], tarEncoding))
+								f.close()
+							except Exception as e:
+								print(e)
+							package["version"] = pack["version"]
+							packages.append(package)
+							savePackages()
+							print("Package " + package["package"] + " successfully installed")
+						else:
+							print(pack["info"])
+								
+						packageFound = True
+					else:
+						print("Usage: install [packagename] [path]")
 				
 				consoleInput.pop(0)
 			
@@ -101,6 +150,11 @@ def main():
 		print("connection closed")
 	else:
 		print("Usage: client host port")
+
+def generateTestPackages():
+	global packages
+	packages = [{"package": "upToDate", "version": "1.0", "url": "ClientPackages/upToDate.tar.gz"}, {"package": "needsUpgrade", "version": "1.0", "url": "ClientPackages/needsUpgrade.tar.gz"}, {"package": "brokenUrlServerside", "version": "2.0", "url": "ClientPackages/brokenUrlServerside.tar.gz"}, {"package": "brokenUrlClientside", "version": "3.0", "url": ""}, {"package": "notOnServer", "version": "1.0", "url": "ClientPackages/notOnServer.tar.gz"}]
+	savePackages()
 
 def loadPackages():
 	global packages
@@ -113,6 +167,16 @@ def loadPackages():
 		f.write("[]")
 	f.close()
 	print("packages loaded")
+
+def savePackages():
+	global packages
+	f = None
+	try:
+		f = open("localPackages.json", "w")
+		f.write(json.dumps(packages))
+		f.close()
+	except Exception as e:
+		print(e)
 
 def startListener():
 	while 1:

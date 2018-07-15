@@ -16,8 +16,10 @@ port = 5000
 ready = False
 connected = False
 running = True
+packsize = 500
 
 def main():
+	generateTestPackages()
 	loadPackages()
 	loadClients()
 	global running
@@ -58,6 +60,15 @@ def loadPackages():
 		f.write("[]")
 	f.close()
 	print("packages loaded")
+
+def savePackages():
+	global packages
+	try:
+		f = open("packages.json", "w")
+		f.write(json.dumps(packages))
+		f.close()
+	except Exception as e:
+		print(e)
 			
 def loadClients():
 	global clients
@@ -161,6 +172,7 @@ def connect(host, port):
 	global ready
 	global connected
 	global running
+	global packsize
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 	try:
 		s.bind((host, port))
@@ -227,29 +239,48 @@ def connect(host, port):
 								packageFound = True
 								if package["version"] == m["package"]["version"]:
 									msg["info"] = "Already up to Date!"
-								f = None
-								try:	
-									f = open("Packages/Test2.tar.gz", "rb")
-									pack = f.read()
-									f.close()
-									try: 
-										pack = pack.decode("utf-8")
-									except UnicodeDecodeError:
-										pack = pack.decode("latin-1")
-									msg = {"info": None, "version": package["version"], "file": pack}
-								except FileNotFoundError:
-									print("Error: couldn't find File")
-									msg["info"] = "File couldn't be found on the server!"
-								break
+								else:
+									f = None
+									try:	
+										f = open(package["url"], "rb")
+										pack = f.read()
+										f.close()
+										try: 
+											pack = pack.decode("utf-8")
+										except UnicodeDecodeError:
+											pack = pack.decode("latin-1")
+										msg = {"info": None, "version": package["version"], "file": pack}
+										'''msgAmount = int(len(pack)/packsize) + 1
+										msg = {"info": msgAmount, "version": package["version"]}
+										inSocket.send(bytes(json.dumps(msg), "utf-8"))
+										cur = 0
+										while cur < msgAmount:
+											low = cur * msgAmount
+											high = min((cur+1)*msgAmount, len(pack))
+											msg = {"file": pack[low:high]}
+											inSocket.send(bytes(json.dumps(msg), "utf-8"))
+											cur += 1
+										cnfrm = inSocket.recv(500)
+										msg = {}'''
+									except FileNotFoundError:
+										print("Error: couldn't find File of package " + package["package"])
+										msg["info"] = "File couldn't be found on the server!"
+									break
 						if not packageFound:
 							print("Package " + m["package"] + " was requested but not found")
 							msg = {"info": "Package couldn't be found on the server!"}
-						inSocket.send(bytes(json.dumps(upgrade), "utf-8"))
+						if msg != {}:
+							inSocket.send(bytes(json.dumps(msg), "utf-8"))
 	tim.cancel()
 	print("child child finished")
 
 def timeout():
 	print("Ich heiße Tim!")	
+
+def generateTestPackages():
+	global packages
+	packages = [{"package": "upToDate", "version": "1.0", "url": "Packages/upToDate.tar.gz"}, {"package": "needsUpgrade", "version": "2.0", "url": "Packages/needsUpgrade.tar.gz"}, {"package": "brokenUrlServerside", "version": "3.0", "url": "1"}, {"package": "brokenUrlClientside", "version": "4.0", "url": "Packages/brokenUrlClientside.tar.gz"}, {"package": "notOnClient", "version": "1.0", "url": "Packages/notOnClient.tar.gz"}]
+	savePackages()
 
 if __name__ == "__main__":
     main()
