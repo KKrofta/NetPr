@@ -1,3 +1,4 @@
+import hashlib
 import json
 import socket
 import subprocess
@@ -8,6 +9,7 @@ from uuid import getnode
 
 packages = []
 consoleInput = []
+tarencoding = "latin-1"
 
 def main():
 	if(len(sys.argv) == 3):
@@ -76,13 +78,17 @@ def main():
 						packageFound = False
 						for package in packages:
 							if package["package"] == command[1]:
-								req = {"type": "upgrade", "package": command[1]}
+								req = {"type": "upgrade", "package": package}
 								s.send(bytes(json.dumps(req), "utf-8"))
 								pack = s.recv(5000)
 								pack = json.loads(pack.decode("utf-8"))
-								f = open("bob.tar.gz", "w+")
-								f.write(pack["file"])
-								f.close()
+								if pack["info"] == None:
+									f = open("bob.tar.gz", "wb")
+									f.write(bytes(pack["file"], tarencoding))
+									f.close()
+								else:
+									print(pack["info"])
+								
 								packageFound = True
 						if not packageFound:
 							print("No such package installed")

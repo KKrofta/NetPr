@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 import select
@@ -103,7 +104,7 @@ def registerClients(s):
 	threads = []
 	try:
 		while running:
-			s.settimeout(2)
+			s.settimeout(2) #Might cause strange behaviour later on
 			try:
 				inSocket, addr = s.accept()
 				info = inSocket.recv(500)
@@ -219,19 +220,31 @@ def connect(host, port):
 					inSocket.send(bytes(json.dumps(updates), "utf-8"))
 				
 				elif m["type"] == "upgrade":
+						msg = {}
 						packageFound = False
 						for package in packages:
-							if package["package"] == m["package"]:
+							if package["package"] == m["package"]["package"]:
 								packageFound = True
+								if package["version"] == m["package"]["version"]:
+									msg["info"] = "Already up to Date!"
 								f = None
 								try:	
-									f = open("Packages/Test.tar.gz", "r", encoding = "latin-1")
+									f = open("Packages/Test2.tar.gz", "rb")
 									pack = f.read()
-									upgrade = {"version": package["version"], "file": pack}
-									inSocket.send(bytes(json.dumps(upgrade), "utf-8"))
+									f.close()
+									try: 
+										pack = pack.decode("utf-8")
+									except UnicodeDecodeError:
+										pack = pack.decode("latin-1")
+									msg = {"info": None, "version": package["version"], "file": pack}
 								except FileNotFoundError:
 									print("Error: couldn't find File")
-								f.close()
+									msg["info"] = "File couldn't be found on the server!"
+								break
+						if not packageFound:
+							print("Package " + m["package"] + " was requested but not found")
+							msg = {"info": "Package couldn't be found on the server!"}
+						inSocket.send(bytes(json.dumps(upgrade), "utf-8"))
 	tim.cancel()
 	print("child child finished")
 
