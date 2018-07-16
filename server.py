@@ -20,6 +20,13 @@ running = True
 packsize = 500
 
 def main():
+	global host
+	global port
+	if len(sys.argv) == 3:
+		host = sys.argv[1]
+		port = int(sys.argv[2])
+	else:
+		print("Usage: python3 server.py [host] [port]")
 	generateTestPackages()
 	loadPackages()
 	loadClients()
@@ -49,9 +56,9 @@ def handleInput():
 			if len(clients) == 0:
 				print("No clients found!")
 			else:
-				print("ID : Info : Connected : Last log in")
+				print("ID : IP : Info : Connected : Last log in")
 				for client in clients:
-					print(client["clientID"] + " : " + str(client["Info"]) + " : " + str(client["alive"]) + " : " + client["date"])
+					print(client["clientID"] + " : " + client["ip"] + " : " + str(client["Info"]) + " : " + str(client["alive"]) + " : " + client["date"])
 		elif command[0] == "client":
 			if len(command) == 2:
 				found = False
@@ -186,6 +193,7 @@ def registerClients(s):
 							client["Info"] = info["Info"]
 							client["alive"] = True
 							client["date"] = info["date"]
+							client["ip"] = info["ip"]
 							saveClients()
 						break
 				if(not alreadyRegistered):

@@ -42,7 +42,7 @@ def main():
 		#TODO
 
 		clientID = str(getnode())
-		clientInfo = {"clientID": clientID, "Info":info}
+		clientInfo = {"clientID": clientID, "Info": info, "ip": socket.gethostbyname(socket.gethostname())}
 		clientInfo = json.dumps(clientInfo)
 		print(clientInfo)
 		sentbytes = s.send(bytes(clientInfo, "utf-8"))
