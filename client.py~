@@ -1,16 +1,19 @@
 import hashlib
 import json
+import platform
 import select
 import socket
 import subprocess
 import sys
 import time
+from psutil import virtual_memory
 from threading import Thread
 from uuid import getnode
 
 packages = []
 consoleInput = []
 tarEncoding = "latin-1"
+running = True
 
 def main():
 	if(len(sys.argv) == 3):
@@ -28,13 +31,14 @@ def main():
 		print("connected to ")
 
 		info = {}
-		cpu = subprocess.Popen(["lscpu | grep -E \"Model name\""], stdout=subprocess.PIPE, shell=True)
-		cpu = str(cpu.communicate()[0]).replace("\\n", "")
-		cpu = cpu[2: len(cpu)-2]
-		print(cpu)
+		gpu = subprocess.Popen(["lshw -c video | grep -E Prod\|prod"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+		gpu = gpu.communicate()[0].decode("utf-8").replace("\\n", "")[16:]
+		cpu = platform.processor()
+		mem = virtual_memory()
+		mem = mem.total
 		info["cpu"] = cpu
-		info["gpu"] = ""
-		info["ram"] = ""
+		info["gpu"] = gpu
+		info["ram"] = mem
 		#TODO
 
 		clientID = str(getnode())
@@ -72,8 +76,26 @@ def main():
 						for update in updates:
 							u = update["package"] + ": Version " + update["updateVersion"] + " aviable, current Version is " + update["version"]
 							print(u)
+
 				elif command[0] == "packages":
-					print(packages)
+					print("Package : Version : Path")
+					for pack in packages:
+						print(pack["package"] + " : " + pack["version"] + " : " + pack["url"])
+
+				elif command[0] == "aviable":
+					req = {"type": "aviable", "packages": []}
+					for package in packages:
+						req["packages"].append(package)
+					s.send(bytes(json.dumps(req), "utf-8"))
+					packs = s.recv(500)
+					packs = json.loads(packs.decode("utf-8"))
+					if len(packs) == 0:
+						print("There are no packages aviable to install")
+					else:
+						print("The following packages can be installed:")
+						for pack in packs:
+							u = pack["package"] + ": Version " + pack["version"]
+							print(u)
 
 				elif command[0] == "upgrade":
 					if len(command) == 2:
@@ -113,7 +135,10 @@ def main():
 
 				elif command[0] == "install":
 					if len(command) == 3:
-						package = {"package": command[1], "version": "", "url": command[2]}
+						path = command[2]
+						if path[7:] != ".tar.gz":
+							path = path + (".tar.gz")
+						package = {"package": command[1], "version": "", "url": path}
 						req = {"type": "upgrade", "package": package}
 						s.send(bytes(json.dumps(req), "utf-8"))
 						pack = s.recv(8000)
@@ -131,12 +156,12 @@ def main():
 								f = open(package["url"], "wb")
 								f.write(bytes(pack["file"], tarEncoding))
 								f.close()
+								package["version"] = pack["version"]
+								packages.append(package)
+								savePackages()
+								print("Package " + package["package"] + " successfully installed")
 							except Exception as e:
 								print(e)
-							package["version"] = pack["version"]
-							packages.append(package)
-							savePackages()
-							print("Package " + package["package"] + " successfully installed")
 						else:
 							print(pack["info"])
 								
@@ -144,6 +169,14 @@ def main():
 					else:
 						print("Usage: install [packagename] [path]")
 				
+				else:
+					print("command : function")
+					print("update : shows a list of the packages that require updates")
+					print("packages : shows the installed packages")
+					print("aviable : shows the packages that could be installed")
+					print("upgrade [packageName] : upgrades the package [packageName] to the newest version]")
+					print("install [packageName] [path] : installs the package [packageName] at the given [path]")
+
 				consoleInput.pop(0)
 			
 		s.close()
@@ -179,7 +212,7 @@ def savePackages():
 		print(e)
 
 def startListener():
-	while 1:
+	while running:
 		command = input("")
 		command = command.split(" ")
 		consoleInput.append(command)

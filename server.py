@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os.path
 import re
 import select
 import socket
@@ -47,7 +48,38 @@ def main():
 			if not found:
 				print("Client not found, might be a wrong ID")
 		elif command[0] == "packages":
-			print(packages)
+			print("Package : Version : Path")
+			for pack in packages:
+				print(pack["package"] + " : " + pack["version"] + " : " + pack["url"])
+
+		elif command[0] == "install":
+			if len(command) != 4:
+				print("Usage: install [packageName] [version] [path]")
+			else:
+				if not os.path.isfile(command[3]):
+					print("No file found under given path! Move the package to the given path before calling install!")
+				else:
+					alreadyInstalled = False
+					for package in packages:
+						if package["package"] == command[1]:
+							alreadyInstalled = True
+							print("Package already installed! If you want to update it type 'yes'.")
+							confirmation = input("")
+							if confirmation == "yes":
+								packages.append({"package": command[1], "version": command[2], "url": command[3]})
+								print("Package successfully updated")
+							break
+						
+					if not alreadyInstalled:		
+						packages.append({"package": command[1], "version": command[2], "url": command[3]})
+						print("Package successfully installed")
+
+		else:
+			print("command : function")
+			print("client : shows a list of the clients")
+			print("client [id] : shows the client with given id")
+			print("packages : shows the installed packages")
+			print("install [packageName] [version] [path] : installs or updates the package at [path] under the name [packageName] and sets it's version to [version]")
 
 def loadPackages():
 	global packages
@@ -230,6 +262,14 @@ def connect(host, port):
 									updates.append(clPackage)
 									break
 					inSocket.send(bytes(json.dumps(updates), "utf-8"))
+
+				elif m["type"] == "aviable":
+					packs = packages
+					for clPackage in m["packages"]:
+						for sePackage in packages:
+							if clPackage["package"] == sePackage["package"]:
+								packs.remove(sePackage)
+					inSocket.send(bytes(json.dumps(packs), "utf-8"))
 				
 				elif m["type"] == "upgrade":
 						msg = {}
