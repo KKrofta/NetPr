@@ -25,7 +25,7 @@ def main():
 	if len(sys.argv) == 3:
 		host = sys.argv[1]
 		port = int(sys.argv[2])
-		generateTestPackages()
+		#generateTestPackages()
 		loadPackages()
 		loadClients()
 		t = Thread(target=startListener, args=())

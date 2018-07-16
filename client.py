@@ -30,7 +30,7 @@ def main():
 		If the command is "install" the procedure is similar to upgrade with the difference that the given path is used and the package is added to packages.
 	"""
 	if(len(sys.argv) == 3):
-		generateTestPackages()
+		#generateTestPackages()
 		loadPackages()
 
 		t = Thread(target=startListener, args=())
