@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module server</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>server</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/kevin/Netzwerkprogrammierung/Prj/NetPr/server.py">/home/kevin/Netzwerkprogrammierung/Prj/NetPr/server.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="_thread.html">_thread</a><br>
+<a href="hashlib.html">hashlib</a><br>
+<a href="json.html">json</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="re.html">re</a><br>
+<a href="select.html">select</a><br>
+</td><td width="25%" valign=top><a href="socket.html">socket</a><br>
+<a href="sys.html">sys</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-connect"><strong>connect</strong></a>(host, port, client)</dt><dd><tt>Creates&nbsp;a&nbsp;socket&nbsp;to&nbsp;handle&nbsp;the&nbsp;communication&nbsp;with&nbsp;a&nbsp;client.&nbsp;When&nbsp;the&nbsp;variable&nbsp;running&nbsp;gets&nbsp;set&nbsp;to&nbsp;False&nbsp;the&nbsp;thread&nbsp;closes.&nbsp;Sets&nbsp;the&nbsp;variables&nbsp;ready&nbsp;and&nbsp;connected&nbsp;to&nbsp;True&nbsp;when&nbsp;the&nbsp;socket&nbsp;creation&nbsp;is&nbsp;succesfull&nbsp;and&nbsp;only&nbsp;ready&nbsp;to&nbsp;true&nbsp;when&nbsp;the&nbsp;socket&nbsp;connection&nbsp;fails.&nbsp;A&nbsp;timer&nbsp;is&nbsp;started&nbsp;that&nbsp;if&nbsp;he&nbsp;runns&nbsp;out&nbsp;stops&nbsp;the&nbsp;thread.&nbsp;For&nbsp;two&nbsp;seconds&nbsp;messages&nbsp;are&nbsp;received&nbsp;on&nbsp;the&nbsp;socket&nbsp;and&nbsp;then&nbsp;it&nbsp;is&nbsp;checked&nbsp;if&nbsp;the&nbsp;timer&nbsp;still&nbsp;runs.&nbsp;Depending&nbsp;on&nbsp;the&nbsp;message&nbsp;types&nbsp;the&nbsp;following&nbsp;will&nbsp;be&nbsp;done:<br>
+When&nbsp;receiving&nbsp;a&nbsp;hearthbeat&nbsp;the&nbsp;timer&nbsp;gets&nbsp;restarted<br>
+When&nbsp;receiving&nbsp;an&nbsp;update&nbsp;the&nbsp;packages&nbsp;installed&nbsp;on&nbsp;the&nbsp;client,&nbsp;which&nbsp;are&nbsp;contained&nbsp;in&nbsp;the&nbsp;message&nbsp;are&nbsp;compared&nbsp;to&nbsp;the&nbsp;ones&nbsp;on&nbsp;the&nbsp;server&nbsp;and&nbsp;then&nbsp;an&nbsp;answer&nbsp;is&nbsp;send&nbsp;through&nbsp;the&nbsp;socket&nbsp;which&nbsp;contains&nbsp;a&nbsp;list&nbsp;of&nbsp;package&nbsp;objects&nbsp;with&nbsp;the&nbsp;attributes&nbsp;"package",&nbsp;"version"&nbsp;and&nbsp;"url".<br>
+When&nbsp;receiving&nbsp;an&nbsp;upgrade&nbsp;the&nbsp;version&nbsp;of&nbsp;the&nbsp;requested&nbsp;package&nbsp;on&nbsp;th&nbsp;client&nbsp;is&nbsp;compared&nbsp;to&nbsp;the&nbsp;on&nbsp;on&nbsp;the&nbsp;server&nbsp;and&nbsp;then&nbsp;a&nbsp;message&nbsp;is&nbsp;send&nbsp;to&nbsp;the&nbsp;server&nbsp;containing&nbsp;"info"&nbsp;which&nbsp;is&nbsp;None&nbsp;if&nbsp;the&nbsp;package&nbsp;could&nbsp;be&nbsp;send&nbsp;successfully&nbsp;or&nbsp;containing&nbsp;the&nbsp;reason&nbsp;why&nbsp;the&nbsp;package&nbsp;couldn't&nbsp;be&nbsp;send&nbsp;as&nbsp;a&nbsp;string.&nbsp;If&nbsp;"info"&nbsp;is&nbsp;None&nbsp;there&nbsp;is&nbsp;also&nbsp;"version"&nbsp;containing&nbsp;the&nbsp;new&nbsp;package&nbsp;version&nbsp;and&nbsp;"file"&nbsp;containing&nbsp;the&nbsp;package&nbsp;file<br>
+When&nbsp;receiving&nbsp;an&nbsp;aviable&nbsp;the&nbsp;packages&nbsp;insalled&nbsp;on&nbsp;the&nbsp;cliend&nbsp;are&nbsp;compared&nbsp;to&nbsp;those&nbsp;on&nbsp;the&nbsp;server&nbsp;and&nbsp;the&nbsp;ones&nbsp;missing&nbsp;on&nbsp;the&nbsp;client&nbsp;are&nbsp;send&nbsp;in&nbsp;a&nbsp;list&nbsp;containing&nbsp;package&nbsp;elements.<br>
+All&nbsp;messages&nbsp;get&nbsp;turned&nbsp;into&nbsp;json&nbsp;strings&nbsp;before&nbsp;beeing&nbsp;encoded&nbsp;into&nbsp;utf-8</tt></dd></dl>
+ <dl><dt><a name="-generateTestPackages"><strong>generateTestPackages</strong></a>()</dt><dd><tt>Creates&nbsp;dummy&nbsp;package&nbsp;data&nbsp;for&nbsp;testing.</tt></dd></dl>
+ <dl><dt><a name="-gmtime"><strong>gmtime</strong></a>(...)</dt><dd><tt><a href="#-gmtime">gmtime</a>([seconds])&nbsp;-&gt;&nbsp;(tm_year,&nbsp;tm_mon,&nbsp;tm_mday,&nbsp;tm_hour,&nbsp;tm_min,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tm_sec,&nbsp;tm_wday,&nbsp;tm_yday,&nbsp;tm_isdst)<br>
+&nbsp;<br>
+Convert&nbsp;seconds&nbsp;since&nbsp;the&nbsp;Epoch&nbsp;to&nbsp;a&nbsp;time&nbsp;tuple&nbsp;expressing&nbsp;UTC&nbsp;(a.k.a.<br>
+GMT).&nbsp;&nbsp;When&nbsp;'seconds'&nbsp;is&nbsp;not&nbsp;passed&nbsp;in,&nbsp;convert&nbsp;the&nbsp;current&nbsp;time&nbsp;instead.<br>
+&nbsp;<br>
+If&nbsp;the&nbsp;platform&nbsp;supports&nbsp;the&nbsp;tm_gmtoff&nbsp;and&nbsp;tm_zone,&nbsp;they&nbsp;are&nbsp;available&nbsp;as<br>
+attributes&nbsp;only.</tt></dd></dl>
+ <dl><dt><a name="-handleInput"><strong>handleInput</strong></a>()</dt><dd><tt>Reads&nbsp;in&nbsp;console&nbsp;commands&nbsp;while&nbsp;running&nbsp;is&nbsp;True<br>
+command&nbsp;:&nbsp;function<br>
+client&nbsp;:&nbsp;shows&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;clients<br>
+client&nbsp;[id]&nbsp;:&nbsp;shows&nbsp;the&nbsp;client&nbsp;with&nbsp;given&nbsp;id<br>
+packages&nbsp;:&nbsp;shows&nbsp;the&nbsp;installed&nbsp;packages<br>
+install&nbsp;[packageName]&nbsp;[version]&nbsp;[path]&nbsp;:&nbsp;installs&nbsp;or&nbsp;updates&nbsp;the&nbsp;package&nbsp;at&nbsp;[path]&nbsp;under&nbsp;the&nbsp;name&nbsp;[packageName]&nbsp;and&nbsp;sets&nbsp;it's&nbsp;version&nbsp;to&nbsp;[version]</tt></dd></dl>
+ <dl><dt><a name="-loadClients"><strong>loadClients</strong></a>()</dt><dd><tt>Loads&nbsp;the&nbsp;clients&nbsp;from&nbsp;a&nbsp;file&nbsp;called&nbsp;clients.json.&nbsp;If&nbsp;no&nbsp;such&nbsp;file&nbsp;is&nbsp;found&nbsp;it&nbsp;gets&nbsp;created.&nbsp;The&nbsp;alive&nbsp;status&nbsp;of&nbsp;all&nbsp;clients&nbsp;is&nbsp;set&nbsp;to&nbsp;False.</tt></dd></dl>
+ <dl><dt><a name="-loadPackages"><strong>loadPackages</strong></a>()</dt><dd><tt>Loads&nbsp;the&nbsp;installed&nbsp;packages&nbsp;from&nbsp;a&nbsp;json&nbsp;file&nbsp;called&nbsp;packages.json.&nbsp;If&nbsp;the&nbsp;file&nbsp;is&nbsp;not&nbsp;fould&nbsp;it&nbsp;gets&nbsp;created.</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt></dl>
+ <dl><dt><a name="-registerClients"><strong>registerClients</strong></a>(s)</dt><dd><tt>Waits&nbsp;for&nbsp;a&nbsp;client&nbsp;to&nbsp;connect&nbsp;and&nbsp;send&nbsp;a&nbsp;dictionary&nbsp;in&nbsp;json&nbsp;format&nbsp;which&nbsp;contains&nbsp;an&nbsp;object&nbsp;with&nbsp;the&nbsp;following&nbsp;attributes:&nbsp;"clientID",&nbsp;"ip",&nbsp;"Info".&nbsp;Where&nbsp;"Info&nbsp;is&nbsp;an&nbsp;object&nbsp;containing&nbsp;"cpu",&nbsp;"gpu"&nbsp;and&nbsp;"ram".&nbsp;Then&nbsp;the&nbsp;client&nbsp;gets&nbsp;added&nbsp;to&nbsp;the&nbsp;clients&nbsp;list.&nbsp;Then&nbsp;a&nbsp;thread&nbsp;is&nbsp;created&nbsp;to&nbsp;handle&nbsp;the&nbsp;communication&nbsp;with&nbsp;the&nbsp;client.&nbsp;The&nbsp;new&nbsp;thread&nbsp;tries&nbsp;to&nbsp;create&nbsp;a&nbsp;socket&nbsp;on&nbsp;the&nbsp;current&nbsp;maximal&nbsp;port&nbsp;used&nbsp;+&nbsp;1&nbsp;if&nbsp;that&nbsp;fails&nbsp;a&nbsp;new&nbsp;thread&nbsp;is&nbsp;created&nbsp;on&nbsp;the&nbsp;next&nbsp;higher&nbsp;port&nbsp;till&nbsp;a&nbsp;socket&nbsp;can&nbsp;be&nbsp;created.&nbsp;The&nbsp;client&nbsp;is&nbsp;send&nbsp;a&nbsp;message&nbsp;only&nbsp;containing&nbsp;the&nbsp;new&nbsp;port&nbsp;and&nbsp;then&nbsp;the&nbsp;socket&nbsp;gets&nbsp;closed&nbsp;and&nbsp;reopened&nbsp;so&nbsp;a&nbsp;new&nbsp;client&nbsp;can&nbsp;connect.</tt></dd></dl>
+ <dl><dt><a name="-saveClients"><strong>saveClients</strong></a>()</dt><dd><tt>Saves&nbsp;the&nbsp;clients&nbsp;to&nbsp;a&nbsp;file&nbsp;called&nbsp;clients.json.</tt></dd></dl>
+ <dl><dt><a name="-savePackages"><strong>savePackages</strong></a>()</dt><dd><tt>Saves&nbsp;the&nbsp;installed&nbsp;packages&nbsp;to&nbsp;a&nbsp;json&nbsp;file&nbsp;called&nbsp;packages.json</tt></dd></dl>
+ <dl><dt><a name="-startListener"><strong>startListener</strong></a>()</dt><dd><tt>Creates&nbsp;a&nbsp;socket&nbsp;with&nbsp;the&nbsp;given&nbsp;host&nbsp;and&nbsp;port.&nbsp;If&nbsp;no&nbsp;socket&nbsp;can&nbsp;be&nbsp;created&nbsp;with&nbsp;the&nbsp;port&nbsp;the&nbsp;port&nbsp;gets&nbsp;increased&nbsp;till&nbsp;a&nbsp;working&nbsp;port&nbsp;is&nbsp;found.&nbsp;RegisterClients&nbsp;is&nbsp;called&nbsp;at&nbsp;the&nbsp;end&nbsp;with&nbsp;the&nbsp;socket&nbsp;as&nbsp;argument.</tt></dd></dl>
+ <dl><dt><a name="-strftime"><strong>strftime</strong></a>(...)</dt><dd><tt><a href="#-strftime">strftime</a>(format[,&nbsp;tuple])&nbsp;-&gt;&nbsp;string<br>
+&nbsp;<br>
+Convert&nbsp;a&nbsp;time&nbsp;tuple&nbsp;to&nbsp;a&nbsp;string&nbsp;according&nbsp;to&nbsp;a&nbsp;format&nbsp;specification.<br>
+See&nbsp;the&nbsp;library&nbsp;reference&nbsp;manual&nbsp;for&nbsp;formatting&nbsp;codes.&nbsp;When&nbsp;the&nbsp;time&nbsp;tuple<br>
+is&nbsp;not&nbsp;present,&nbsp;current&nbsp;time&nbsp;as&nbsp;returned&nbsp;by&nbsp;localtime()&nbsp;is&nbsp;used.<br>
+&nbsp;<br>
+Commonly&nbsp;used&nbsp;format&nbsp;codes:<br>
+&nbsp;<br>
+%Y&nbsp;&nbsp;Year&nbsp;with&nbsp;century&nbsp;as&nbsp;a&nbsp;decimal&nbsp;number.<br>
+%m&nbsp;&nbsp;Month&nbsp;as&nbsp;a&nbsp;decimal&nbsp;number&nbsp;[01,12].<br>
+%d&nbsp;&nbsp;Day&nbsp;of&nbsp;the&nbsp;month&nbsp;as&nbsp;a&nbsp;decimal&nbsp;number&nbsp;[01,31].<br>
+%H&nbsp;&nbsp;Hour&nbsp;(24-hour&nbsp;clock)&nbsp;as&nbsp;a&nbsp;decimal&nbsp;number&nbsp;[00,23].<br>
+%M&nbsp;&nbsp;Minute&nbsp;as&nbsp;a&nbsp;decimal&nbsp;number&nbsp;[00,59].<br>
+%S&nbsp;&nbsp;Second&nbsp;as&nbsp;a&nbsp;decimal&nbsp;number&nbsp;[00,61].<br>
+%z&nbsp;&nbsp;Time&nbsp;zone&nbsp;offset&nbsp;from&nbsp;UTC.<br>
+%a&nbsp;&nbsp;Locale's&nbsp;abbreviated&nbsp;weekday&nbsp;name.<br>
+%A&nbsp;&nbsp;Locale's&nbsp;full&nbsp;weekday&nbsp;name.<br>
+%b&nbsp;&nbsp;Locale's&nbsp;abbreviated&nbsp;month&nbsp;name.<br>
+%B&nbsp;&nbsp;Locale's&nbsp;full&nbsp;month&nbsp;name.<br>
+%c&nbsp;&nbsp;Locale's&nbsp;appropriate&nbsp;date&nbsp;and&nbsp;time&nbsp;representation.<br>
+%I&nbsp;&nbsp;Hour&nbsp;(12-hour&nbsp;clock)&nbsp;as&nbsp;a&nbsp;decimal&nbsp;number&nbsp;[01,12].<br>
+%p&nbsp;&nbsp;Locale's&nbsp;equivalent&nbsp;of&nbsp;either&nbsp;AM&nbsp;or&nbsp;PM.<br>
+&nbsp;<br>
+Other&nbsp;codes&nbsp;may&nbsp;be&nbsp;available&nbsp;on&nbsp;your&nbsp;platform.&nbsp;&nbsp;See&nbsp;documentation&nbsp;for<br>
+the&nbsp;C&nbsp;library&nbsp;strftime&nbsp;function.</tt></dd></dl>
+ <dl><dt><a name="-timeout"><strong>timeout</strong></a>()</dt><dd><tt>Timeout&nbsp;function&nbsp;of&nbsp;the&nbsp;timer&nbsp;for&nbsp;the&nbsp;hearthbeat.&nbsp;Only&nbsp;prints&nbsp;Timeout.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>clients</strong> = []<br>
+<strong>connected</strong> = False<br>
+<strong>host</strong> = 'localhost'<br>
+<strong>packages</strong> = []<br>
+<strong>packsize</strong> = 500<br>
+<strong>port</strong> = 5000<br>
+<strong>ready</strong> = False<br>
+<strong>running</strong> = True</td></tr></table>
+</body></html>

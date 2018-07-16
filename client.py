@@ -16,6 +16,19 @@ tarEncoding = "latin-1"
 running = True
 
 def main():
+	"""
+	Creates a thread to listen to console commands and then starts a socket on the given host and port.
+	To start communication a message containing "clientID", "ip" and "info" which contains "cpu", "gpu" and "ram" is send via the socket.
+	When the server sends a port as answer the connection is closed and the connection to a new socket is started with the given port.
+	Then a while loop is started doing two things on each loop:
+		First a message containing a dictionary with one attribute "type" wich contains the string "hearthbeat" is send.
+		Second the commands stored in consoleInput are worked off.
+		If the command is "packages" the packages installed are printed out
+		If the command is "update" a message is send to the server which contains a dictionary with "type" "update" and the packages list as "packages". The server then replies with a list of packages in the same format which contain those packages that have a different version on the server compared to the ones installed on the client. This list gets printed out.
+		If the command is "aviable" the procedure is similar to update with the difference that the packages send by the sever are the ones which are not installed on the client.
+		If the command is "upgrade" a message gets send to the server that contains the "type" upgrade and the package that shall be updated. The server then sends the file and new version number. The file is then installed und der the path given under "url" in the corresponding element in packages.
+		If the command is "install" the procedure is similar to upgrade with the difference that the given path is used and the package is added to packages.
+	"""
 	if(len(sys.argv) == 3):
 		generateTestPackages()
 		loadPackages()
@@ -50,13 +63,12 @@ def main():
 	
 		port = s.recv(500)
 		port = int(port.decode("utf-8"))
-		print("connecting to port:")
-		print(port)
+		print("connecting to port: " + str(port))
 
 		s.close()
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 		s.connect((host, port))
-		print("connected to ")
+		print("connected")
 		
 		while 1:
 			time.sleep(1)
@@ -185,11 +197,17 @@ def main():
 		print("Usage: client host port")
 
 def generateTestPackages():
+	"""
+	Generates dummy package data for testing.
+	"""
 	global packages
 	packages = [{"package": "upToDate", "version": "1.0", "url": "ClientPackages/upToDate.tar.gz"}, {"package": "needsUpgrade", "version": "1.0", "url": "ClientPackages/needsUpgrade.tar.gz"}, {"package": "brokenUrlServerside", "version": "2.0", "url": "ClientPackages/brokenUrlServerside.tar.gz"}, {"package": "brokenUrlClientside", "version": "3.0", "url": ""}, {"package": "notOnServer", "version": "1.0", "url": "ClientPackages/notOnServer.tar.gz"}]
 	savePackages()
 
 def loadPackages():
+	"""
+	Loads the installed packages from a json file called localPackages.json. If the file is not fould it gets created.
+	"""
 	global packages
 	f = None
 	try:
@@ -202,6 +220,9 @@ def loadPackages():
 	print("packages loaded")
 
 def savePackages():
+	"""
+	Saves the installed packages to a json file called localPackages.json
+	"""
 	global packages
 	f = None
 	try:
@@ -212,6 +233,9 @@ def savePackages():
 		print(e)
 
 def startListener():
+	"""
+	Listens for console input and adds it to the consoleInput list so that it can be handled.
+	"""
 	while running:
 		command = input("")
 		command = command.split(" ")
