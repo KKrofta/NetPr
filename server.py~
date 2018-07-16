@@ -1,7 +1,6 @@
 import hashlib
 import json
 import os.path
-import platform
 import re
 import select
 import socket
@@ -24,9 +23,21 @@ def main():
 	generateTestPackages()
 	loadPackages()
 	loadClients()
-	global running
 	t = Thread(target=startListener, args=())
 	t.start()
+	handleInput()
+
+
+def handleInput():
+	""" 
+	Reads in console commands while running is True
+	command : function
+	client : shows a list of the clients
+	client [id] : shows the client with given id
+	packages : shows the installed packages
+	install [packageName] [version] [path] : installs or updates the package at [path] under the name [packageName] and sets it's version to [version]
+	"""
+	global running
 	while running:
 		command = input("")
 		command = command.split(" ")
@@ -38,16 +49,20 @@ def main():
 			if len(clients) == 0:
 				print("No clients found!")
 			else:
+				print("ID : Info : Connected : Last log in")
 				for client in clients:
-					print(client)
+					print(client["clientID"] + " : " + str(client["Info"]) + " : " + str(client["alive"]) + " : " + client["date"])
 		elif command[0] == "client":
-			found = False
-			for client in clients:
-				if client["clientID"] == command[1]:
-					print(client)
-					found = True
-			if not found:
-				print("Client not found, might be a wrong ID")
+			if len(command) == 2:
+				found = False
+				for client in clients:
+					if client["clientID"] == command[1]:
+						print(client)
+						found = True
+				if not found:
+					print("Client not found, might be a wrong ID")
+			else:
+				print("Usage: client [clientID]")
 		elif command[0] == "packages":
 			print("Package : Version : Path")
 			for pack in packages:
@@ -113,6 +128,8 @@ def loadClients():
 		f = open("clients.json", "w+")
 		f.write("[]")
 	f.close()
+	for client in clients:
+		client["alive"] = False
 	print("clients loaded")
 
 def saveClients():
@@ -145,6 +162,7 @@ def registerClients(s):
 	global ready
 	global connected
 	global running
+	global clients
 	threads = []
 	try:
 		while running:
@@ -161,22 +179,24 @@ def registerClients(s):
 				for client in clients:
 					if client["clientID"] == info["clientID"]:
 						alreadyRegistered = True
-						clientInfo = client
+						if client["alive"]:
+							#TODO
+							print("ERROR: Client already connected!")
+						else:
+							client["Info"] = info["Info"]
+							client["alive"] = True
+							client["date"] = info["date"]
+							saveClients()
+						break
 				if(not alreadyRegistered):
 					clients.append(info)
-					saveClients()
-				elif clientInfo["alive"]:
-					#TODO
-					print("ERROR: Client already connected!")
-				else:
-					clientInfo = info
 					saveClients()
 
 				t = None
 				while not connected:
 					print("not connected")
 					port += 1
-					t = Thread(target=connect, args=(host, port,))
+					t = Thread(target=connect, args=(host, port, info,))
 					t.start()
 					while not ready:
 						#print("not ready")
@@ -199,7 +219,7 @@ def registerClients(s):
 		s.close()
 		print("child finished")
 
-def connect(host, port):
+def connect(host, port, client):
 	#TODO catch client disconnecting
 	print("hello")
 	global ready
@@ -227,16 +247,25 @@ def connect(host, port):
 	tim.start()
 	print("Tim lives")
 
-	run = True
-	while run and running:
+	while running:
 		if not tim.is_alive():
-			run = False
-			#TODO set alive to false
+			for cl in clients:
+				if cl["clientID"] == client["clientID"]:
+					cl["alive"] = False
+					break
+			break
 
 		rdy = select.select([inSocket], [], [], 2)
 		if rdy[0]:
 			msg = inSocket.recv(5000)
 			msg = msg.decode("utf-8")
+			if msg == "":
+				print("client " + client["clientID"] + " disconnected")
+				for cl in clients:
+					if cl["clientID"] == client["clientID"]:
+						cl["alive"] = False
+						break
+				break
 			msg = msg.split("}{")
 			#TODO: catch halve complete messages
 			i = 0
@@ -301,7 +330,11 @@ def connect(host, port):
 						if msg != {}:
 							inSocket.send(bytes(json.dumps(msg), "utf-8"))
 	tim.cancel()
-	print("child child finished")
+	for cl in clients:
+		if cl["clientID"] == client["clientID"]:
+			cl["alive"] = False
+			break
+	print("Thread for client " + client["clientID"] + " finished")
 
 def timeout():
 	print("Ich heiße Tim!")	
